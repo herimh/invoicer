@@ -1,0 +1,7 @@
+parameters:
+#    inodata_invoicer.example.class: Inodata\InvoicerBundle\Example
+
+services:
+#    inodata_invoicer.example:
+#        class: %inodata_invoicer.example.class%
+#        arguments: [@service_id, "plain_value", %parameter%]

@@ -18,6 +18,7 @@ class AppKernel extends Kernel
             new Sensio\Bundle\FrameworkExtraBundle\SensioFrameworkExtraBundle(),
             new Erivello\SimpleHtmlDomBundle\ErivelloSimpleHtmlDomBundle(),
             new Acme\UserBundle\AcmeUserBundle(),
+            new Inodata\InvoicerBundle\InodataInvoicerBundle(),
         );
 
         if (in_array($this->getEnvironment(), array('dev', 'test'))) {

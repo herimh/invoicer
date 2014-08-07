@@ -1,0 +1,7 @@
+inodata_invoicer_homepage:
+    path:     /hello/{name}
+    defaults: { _controller: InodataInvoicerBundle:Default:index }
+
+inodata_invoicer_parser:
+    path:     /invoicer/get/and/parse
+    defaults: { _controller: InodataInvoicerBundle:Parser:index }

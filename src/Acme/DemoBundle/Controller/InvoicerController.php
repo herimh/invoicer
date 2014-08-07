@@ -17,7 +17,9 @@ class InvoicerController extends Controller{
         $ch = $this->getGmailInbox();
         
         $mailAsXml = $this->getMailsList($ch);
-        $xml = new \SimpleXMLElement($mailAsXml);
+        //$xml = new \SimpleXMLElement($mailAsXml);
+        
+        print_r($mailAsXml); exit();
         
         $emailsLink = [];
         foreach ($xml->entry as $entry){
@@ -95,6 +97,9 @@ class InvoicerController extends Controller{
         //Parsing the html response, using simple_html_dom library
         $parser = $this->container->get("simple_html_dom");
         $form = $parser->load($login)->find('form', 0);
+        
+        //print_r($login); exit();
+        
         $urlAuth = $form->action;
         
         /* Create an array using the login form inputs */
@@ -120,8 +125,12 @@ class InvoicerController extends Controller{
         curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
         $result = curl_exec($ch);
         
-        //curl_setopt($ch, CURLOPT_URL, "https://mail.google.com/mail/u/0/?pli=1#inbox");
-        //$inbox = curl_exec($ch);
+        
+        
+        curl_setopt($ch, CURLOPT_URL, "https://mail.google.com/mail/u/0/?pli=1#inbox");
+        $inbox = curl_exec($ch);
+        
+        print_r($inbox); exit();
         
         return $ch;
     }
