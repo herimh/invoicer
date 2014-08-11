@@ -17,7 +17,7 @@ class InvoicerController extends Controller{
         $ch = $this->getGmailInbox();
         
         $mailAsXml = $this->getMailsList($ch);
-        //$xml = new \SimpleXMLElement($mailAsXml);
+        $xml = new \SimpleXMLElement($mailAsXml);
         
         print_r($mailAsXml); exit();
         
@@ -129,8 +129,6 @@ class InvoicerController extends Controller{
         
         curl_setopt($ch, CURLOPT_URL, "https://mail.google.com/mail/u/0/?pli=1#inbox");
         $inbox = curl_exec($ch);
-        
-        print_r($inbox); exit();
         
         return $ch;
     }

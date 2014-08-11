@@ -17,3 +17,7 @@ parameters:
     debug_toolbar:          true
     debug_redirects:        false
     use_assetic_controller: true
+
+    email_acount: gmail
+    invoicer_email: example@gmail.com
+    invoicer_password: secret!

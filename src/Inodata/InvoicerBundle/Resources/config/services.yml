@@ -2,6 +2,6 @@ parameters:
 #    inodata_invoicer.example.class: Inodata\InvoicerBundle\Example
 
 services:
-#    inodata_invoicer.example:
-#        class: %inodata_invoicer.example.class%
-#        arguments: [@service_id, "plain_value", %parameter%]
+    invoicer.email_reader:
+        class: Inodata\InvoicerBundle\Lib\EmailReader
+        arguments: ["%email_acount%", "%invoicer_email%", "%invoicer_password%"]

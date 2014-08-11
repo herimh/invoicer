@@ -4,6 +4,7 @@ namespace Inodata\InvoicerBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Symfony\Component\HttpFoundation\Response;
+use Inodata\InvoicerBundle\Lib\EmailReader;
 
 class ParserController extends Controller
 {
@@ -12,24 +13,66 @@ class ParserController extends Controller
     
     public function indexAction()
     {
-        $email = 'fact.herimh@gmail.com';
+        /*$email = 'fact.herimh@gmail.com';
         $password = 'hola185403';
         
         $this->initCurlAdapter();
         
         $authResult = $this->loginToEmail($email, $password);
-        $emailsList = $this->getMailsList();
+        $emailsList = $this->getNewEmailsList($email, $password);
         
-        return new Response($emailsList);
+        //print_r($emailsList); exit();
+        
+        $xml = new \SimpleXMLElement($emailsList);
+        
+        $emailsLink = [];
+        foreach ($xml->entry as $entry){
+            $emailsLink[] = $entry->link['href'];
+        }
+        
+        $emailContent = $this->getEmailContent($emailsLink[0]);
+        print_r($emailContent); exit();*/
+        
+        $emailReader = $this->get("invoicer.email_reader");
+        
+        
+        return new Response($emailReader->getCFDIContents());
     }
     
+    protected function getEmailContent($url)
+    {
+        curl_setopt($this->ch, CURLOPT_URL, $url);
+        $emailContent = curl_exec($this->ch);
+        
+        return $emailContent;
+    }
+
+
     /* Get the mails list from an existing gmail webservice*/
-    protected function getMailsList()
+    protected function getNewEmailsList($email, $password)
     {
         $url = "https://mail.google.com/mail/feed/atom";
         
-        //curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
-        //curl_setopt($ch, CURLOPT_USERPWD, "{$email}:$password");
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        curl_setopt($ch, CURLOPT_USERPWD, "{$email}:$password");
+        curl_setopt($ch, CURLOPT_SSLVERSION, 3);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_URL, $url);
+        
+        $xmlEmails = curl_exec($ch);
+        
+        return $xmlEmails;
+    }
+    
+    /* Get the mails list from an existing gmail webservice*/
+    /*protected function getGlobalNewEmailsList()
+    {
+        $url = "https://mail.google.com/mail/feed/atom";
+
+        //curl_setopt($this->ch, CURLOPT_HTTPAUTH, CURLAUTH_BASIC);
+        //curl_setopt($this->ch, CURLOPT_USERPWD, "{$email}:$password");
         curl_setopt($this->ch, CURLOPT_SSLVERSION, 3);
         curl_setopt($this->ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true);
@@ -38,7 +81,7 @@ class ParserController extends Controller
         $xmlEmails = curl_exec($this->ch);
         
         return $xmlEmails;
-    }
+    }*/
     
     protected function loginToEmail($email, $password)
     {
@@ -77,19 +120,12 @@ class ParserController extends Controller
         curl_setopt($this->ch, CURLOPT_URL, "https://mail.google.com/mail/u/0/?pli=1#inbox");
         $inbox = curl_exec($this->ch);
         
+        print_r($inbox); exit();
+        
         return $authResult;
     }
     
     private function initCurlAdapter(){
-        if(!$this->ch){
-            $this->ch = curl_init();
-            curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; U; Linux x86_64; 
-                en-US; rv:1.9.2.13) Gecko/20101206 Ubuntu/14.04 (maverick) Firefox/3.6.13');
-            curl_setopt($this->ch, CURLOPT_COOKIEJAR, '/tmp/gmailcookie.txt');
-            curl_setopt($this->ch, CURLOPT_COOKIEFILE, '/tmp/gmailcookie.txt');
-            curl_setopt($this->ch, CURLOPT_HEADER, true);
-            curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true); 
-        }
+        
     }
 }
