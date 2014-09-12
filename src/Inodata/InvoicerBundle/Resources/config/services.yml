@@ -4,4 +4,4 @@ parameters:
 services:
     invoicer.email_reader:
         class: Inodata\InvoicerBundle\Lib\EmailReader
-        arguments: ["%email_acount%", "%invoicer_email%", "%invoicer_password%"]
+        arguments: [ "%email_acount%", "%invoicer_email%", "%invoicer_password%", @service_container ]

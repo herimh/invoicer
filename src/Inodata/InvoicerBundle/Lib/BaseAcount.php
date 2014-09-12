@@ -3,6 +3,7 @@
 namespace Inodata\InvoicerBundle\Lib;
 
 use Symfony\Component\DependencyInjection\ContainerAware;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
 
 /**
  * Description of BaseAcount
@@ -42,22 +43,22 @@ class BaseAcount extends ContainerAware
         $this->initCurlAdapter();
     }
     
-    public function login(){
+    protected function login(){
         
     }
     
-    public function loadInbox(){
+    protected function loadInbox(){
         
     }
     
-    public function loadAndGetInbox(){
+    protected function loadAndGetInbox(){
         
     }
     
     /**
      * @return xml List of new emails
      */
-    public function getNewEmails(){
+    protected function getNewEmails(){
         
     }
     
@@ -68,7 +69,7 @@ class BaseAcount extends ContainerAware
      * @param String $ch : get the CURL adapter.
      * @param String $dataType : define the data format to return, 'Array'' as default
      */
-    public function getEmailContent($url, $ch,  $dataType='array'){
+    protected function getEmailContent($url, $ch,  $dataType='array'){
         
     }
     
@@ -79,7 +80,7 @@ class BaseAcount extends ContainerAware
      * @param String $ch : get the CURL adapter.
      * @param String $dataType : define the data format to return, 'Array'' as default
      */
-    public function getEmailsContent($urls, $ch, $dataType='array'){
+    protected function getEmailsContent($urls, $ch, $dataType='array'){
         
     }
     

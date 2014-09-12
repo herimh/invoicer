@@ -13,26 +13,6 @@ class ParserController extends Controller
     
     public function indexAction()
     {
-        /*$email = 'fact.herimh@gmail.com';
-        $password = 'hola185403';
-        
-        $this->initCurlAdapter();
-        
-        $authResult = $this->loginToEmail($email, $password);
-        $emailsList = $this->getNewEmailsList($email, $password);
-        
-        //print_r($emailsList); exit();
-        
-        $xml = new \SimpleXMLElement($emailsList);
-        
-        $emailsLink = [];
-        foreach ($xml->entry as $entry){
-            $emailsLink[] = $entry->link['href'];
-        }
-        
-        $emailContent = $this->getEmailContent($emailsLink[0]);
-        print_r($emailContent); exit();*/
-        
         $emailReader = $this->get("invoicer.email_reader");
         
         

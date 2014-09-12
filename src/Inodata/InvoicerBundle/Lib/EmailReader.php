@@ -16,15 +16,25 @@ namespace Inodata\InvoicerBundle\Lib;
 class EmailReader 
 { 
     private $emailAcount;
-    
-    public function __construct($emailAcount, $email, $password)
+
+    public function __construct($emailAcount, $email, $password, $container)
     {
         $this->emailAcount = $this->getEmailAcountObject($emailAcount, $email, $password);
+        $this->emailAcount->setContainer( $container);
     }
     
     public function getCFDIContents()
     {
-        return $this->emailAcount->loadInbox();
+        //Retrieve the new emails in a XML document
+        /*$newEmails = $this->emailAcount->getNewEmailsList();
+        
+        $xml = new \SimpleXMLElement($newEmails);
+        foreach ($xml->entry as $entry){
+            $this->getCFDIContent($entry->link['href']);
+        }*/
+        $this->emailAcount->getEmailsList();
+        
+        return;
     }
     
     private function getEmailAcountObject($emailAcount, $email, $password)
@@ -42,5 +52,10 @@ class EmailReader
         }
         
         return null;
+    }
+    
+    private function getCFDIContent($url)
+    {
+        print_r($url."<br>");
     }
 }
