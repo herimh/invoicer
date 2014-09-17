@@ -25,13 +25,6 @@ class EmailReader
     
     public function getCFDIContents()
     {
-        //Retrieve the new emails in a XML document
-        /*$newEmails = $this->emailAcount->getNewEmailsList();
-        
-        $xml = new \SimpleXMLElement($newEmails);
-        foreach ($xml->entry as $entry){
-            $this->getCFDIContent($entry->link['href']);
-        }*/
         $this->emailAcount->getEmailsList();
         
         return;

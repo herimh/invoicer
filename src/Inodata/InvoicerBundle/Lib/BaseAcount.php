@@ -12,6 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
  */
 class BaseAcount extends ContainerAware
 {
+
     protected $ch = null;
     
     protected $email = '';
@@ -21,10 +22,10 @@ class BaseAcount extends ContainerAware
         $this->email = $email;
         $this->password = $password;
         
-        $this->initCurlAdapter();
+        //$this->initCurlAdapter();
     }
     
-    private function initCurlAdapter()
+    /*private function initCurlAdapter()
     {
         if(!$this->ch){
             $this->ch = curl_init();
@@ -36,12 +37,7 @@ class BaseAcount extends ContainerAware
             curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, true);
             curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true); 
         }
-    }
-    
-    public function resetCurlAdapter(){
-        $this->ch = null;
-        $this->initCurlAdapter();
-    }
+    }*/
     
     protected function login(){
         
