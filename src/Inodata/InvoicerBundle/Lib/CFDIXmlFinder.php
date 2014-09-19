@@ -12,6 +12,13 @@ class CFDIXmlFinder
     const MIME_TYPE_VIDEO = 6;
     const MIME_TYPE_OTHER = 7;
     
+    const ENCODING_7BIT = 0;
+    const ENCODING_8BIT = 1;
+    const ENCODING_BINARY = 2;
+    const ENCODING_BASE64 = 3;
+    const ENCODING_QUOTED_PRINTABLE = 4;
+
+
     public static function getCFDIFromFile($file){
         
     }
@@ -22,16 +29,31 @@ class CFDIXmlFinder
     
     private static function getCFDIFromText($body, $structure){
         print_r("Text <br>");
-        print_r($body);        print_r("<br><br>");
+        print_r(imap_base64($body));        print_r("<br><br>");
         print_r($structure);        print_r("<br><br>");
         return "";
     }
     
-    private static function getCFDIFromApplication($body, $structure){
-        print_r("Application <br>");
-        print_r($body);        print_r("<br>");
-        print_r($structure);        print_r("<br>");
+    private static function getCFDIFromApplication($content, $structure){
+        switch ($structure->subtype){
+            case 'pdf':
+                break;
+            case 'xml':
+                break;
+            default :
+                self::parseFileFromZIP(self::encodeContent($content, $structure->encoding));
+                break;
+        }
         return "";
+    }
+    
+    private static function parseFileFromZIP($content)
+    {
+        $file = fopen("email-122.zip", 'w+');
+        fwrite($file, $content);
+        fclose($file);
+        
+        
     }
 
     protected function findUrlsInText($body){
@@ -58,27 +80,22 @@ class CFDIXmlFinder
         
         $content = imap_fetchbody($imap, $uid, $partNumber, FT_UID);
         
-        print_r("pART ".$partNumber."<br><br>");
-        print_r($content."<br><br>");
-        print_r($structure);
-        print_r("<br><br>");
-        
         switch ($structure->type)
         {
             case self::MIME_TYPE_TEXT:
-                if($mainMimeType == self::MIME_TYPE_TEXT){
-                    return self::getCFDIFromText($content, $structure);
-                }
+                //if($mainMimeType == self::MIME_TYPE_TEXT){
+                    self::getCFDIFromText($content, $structure);
+                //}
                 break; 
                 
             case self::MIME_TYPE_MULTIPART:
                 //TODO: logic for multipart email
                 foreach ($structure->parts as $index => $subStruct){
                     
-                    $newPartNumber = $partNumber.".".($index+1);
-                    $data = self::fetchContent($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
+                    $newPartNumber = ($index+1);
+                    self::fetchContent($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
                     
-                    return $data;
+                    //return $data;
                 }
                 break;
             
@@ -87,7 +104,7 @@ class CFDIXmlFinder
                 break;
             
             case self::MIME_TYPE_APPLICATION:
-                return self::getCFDIFromApplication($content, $structure);
+                self::getCFDIFromApplication($content, $structure);
                 break;
             
             case self::MIME_TYPE_AUDIO:
@@ -108,6 +125,25 @@ class CFDIXmlFinder
         }
         
         return null;
+    }
+    
+    protected static function encodeContent($content, $encodingType)
+    {
+        switch ($encodingType){
+            case self::ENCODING_7BIT:
+                return imap_7bit($content);
+            case self::ENCODING_8BIT:
+                return imap_8bit($content);
+            case self::ENCODING_BASE64:
+                print_r("Encoding base64");
+                return imap_base64($content);
+            case self::ENCODING_BINARY:
+                return imap_binary($content);
+            case self::ENCODING_QUOTED_PRINTABLE;
+                return imap_qprint($content);
+        }
+        
+        return $content;
     }
     
 }
