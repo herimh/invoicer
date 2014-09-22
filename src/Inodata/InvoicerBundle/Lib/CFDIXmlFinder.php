@@ -18,18 +18,8 @@ class CFDIXmlFinder
     const ENCODING_BASE64 = 3;
     const ENCODING_QUOTED_PRINTABLE = 4;
     
-    const XML_FILE = 'application/xml';
-
-
+    const TYPE_XML = 'application/xml';
     const ZIP_FILES_FOLDER = "/home/heriberto/invoicer/zip/";
-
-        public static function getCFDIFromFile($file){
-        
-    }
-
-    /*public static function getCFDIFromText($text){
-        return $this->getCFDIFromText($text);
-    }*/
     
     private static function getCFDIFromText($body, $structure){
         print_r("Text <br>");
@@ -83,7 +73,7 @@ class CFDIXmlFinder
         
         $xmlDocs = [];
         foreach ($files as $file){
-            if(mime_content_type($dir.$file) == self::XML_FILE){
+            if(mime_content_type($dir.$file) == self::TYPE_XML){
                 $xmlDocs[] = simplexml_load_file($dir.$file);
             }
         }
@@ -105,7 +95,7 @@ class CFDIXmlFinder
         
     }
 
-    public static function fetchContent($imap, $uid, $mainMimeType = null, $structure = false, $partNumber = 1 )
+    public static function fetchContent($imap, $uid, $mainMimeType = null, $structure = false, $partNumber = 1)
     {
         if(!$structure){
             $structure = imap_fetchstructure($imap, $uid, FT_UID);
@@ -120,29 +110,26 @@ class CFDIXmlFinder
         switch ($structure->type)
         {
             case self::MIME_TYPE_TEXT:
-                //if($mainMimeType == self::MIME_TYPE_TEXT){
-                    self::getCFDIFromText($content, $structure);
-                //}
+                if($mainMimeType == self::MIME_TYPE_TEXT){
+                    return self::getCFDIFromText($content, $structure);
+                }
                 break; 
                 
             case self::MIME_TYPE_MULTIPART:
-                //TODO: logic for multipart email
+                $xmlDocs = [];
                 foreach ($structure->parts as $index => $subStruct){
                     
                     $newPartNumber = ($index+1);
-                    self::fetchContent($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
-                    
-                    //return $data;
+                    $xmlDocs = self::fetchContent($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
                 }
-                break;
+                return $xmlDocs;
             
             case self::MIME_TYPE_MESSAGE:
                 //TODO: logic for message type
                 break;
             
             case self::MIME_TYPE_APPLICATION:
-                self::getCFDIFromApplication($content, $structure);
-                break;
+                return self::getCFDIFromApplication($content, $structure);
             
             case self::MIME_TYPE_AUDIO:
                 //TODO: logic for audio type
@@ -161,7 +148,7 @@ class CFDIXmlFinder
                 break;
         }
         
-        return null;
+        return $xmlDocs;
     }
     
     protected static function encodeContent($content, $encodingType)
@@ -172,7 +159,6 @@ class CFDIXmlFinder
             case self::ENCODING_8BIT:
                 return imap_8bit($content);
             case self::ENCODING_BASE64:
-                print_r("Encoding base64");
                 return imap_base64($content);
             case self::ENCODING_BINARY:
                 return imap_binary($content);

@@ -25,20 +25,6 @@ class BaseAcount extends ContainerAware
         //$this->initCurlAdapter();
     }
     
-    /*private function initCurlAdapter()
-    {
-        if(!$this->ch){
-            $this->ch = curl_init();
-            curl_setopt($this->ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (X11; U; Linux x86_64; 
-                en-US; rv:1.9.2.13) Gecko/20101206 Ubuntu/14.04 (maverick) Firefox/3.6.13');
-            curl_setopt($this->ch, CURLOPT_COOKIEJAR, '/tmp/gmailcookie.txt');
-            curl_setopt($this->ch, CURLOPT_COOKIEFILE, '/tmp/gmailcookie.txt');
-            curl_setopt($this->ch, CURLOPT_HEADER, true);
-            curl_setopt($this->ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($this->ch, CURLOPT_RETURNTRANSFER, true); 
-        }
-    }*/
-    
     protected function login(){
         
     }
