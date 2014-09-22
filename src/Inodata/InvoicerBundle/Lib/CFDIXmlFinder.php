@@ -17,9 +17,13 @@ class CFDIXmlFinder
     const ENCODING_BINARY = 2;
     const ENCODING_BASE64 = 3;
     const ENCODING_QUOTED_PRINTABLE = 4;
+    
+    const XML_FILE = 'application/xml';
 
 
-    public static function getCFDIFromFile($file){
+    const ZIP_FILES_FOLDER = "/home/heriberto/invoicer/zip/";
+
+        public static function getCFDIFromFile($file){
         
     }
 
@@ -35,25 +39,58 @@ class CFDIXmlFinder
     }
     
     private static function getCFDIFromApplication($content, $structure){
+        print_r("Text <br>");
+        print_r($structure); print_r("<br><br>");
+        
+        $contentEncoded = self::encodeContent($content, $structure->encoding);
+        $applicationName = self::getApplicationName($structure);
+        
         switch ($structure->subtype){
             case 'pdf':
                 break;
             case 'xml':
                 break;
             default :
-                self::parseFileFromZIP(self::encodeContent($content, $structure->encoding));
-                break;
+                return self::parseFileFromZIP($contentEncoded, $applicationName);
         }
         return "";
     }
     
-    private static function parseFileFromZIP($content)
+    private static function parseFileFromZIP($content, $fileName)
     {
-        $file = fopen("email-122.zip", 'w+');
+        //Creating zip file temporally
+        $file = fopen(self::ZIP_FILES_FOLDER.$fileName, 'w');
         fwrite($file, $content);
-        fclose($file);
+        //fclose($file);
         
+        //Uncompress zip file
+        $zip = new \ZipArchive();
+        $res = $zip->open(self::ZIP_FILES_FOLDER.$fileName);
+        if($res === TRUE){
+            $zip->extractTo(self::ZIP_FILES_FOLDER);
+            $zip->close();
+        }
         
+        //Delet zip file created previously
+        unlink(self::ZIP_FILES_FOLDER.$fileName);
+        
+        //Reading folder contend
+        return self::findXMLFromDir(self::ZIP_FILES_FOLDER);
+    }
+    
+    private static function findXMLFromDir($dir){
+        $files = scandir($dir);
+        
+        $xmlDocs = [];
+        foreach ($files as $file){
+            if(mime_content_type($dir.$file) == self::XML_FILE){
+                $xmlDocs[] = simplexml_load_file($dir.$file);
+            }
+        }
+        
+        print_r($xmlDocs); exit();
+        
+        return $xmlDocs;
     }
 
     protected function findUrlsInText($body){
@@ -131,7 +168,7 @@ class CFDIXmlFinder
     {
         switch ($encodingType){
             case self::ENCODING_7BIT:
-                return imap_7bit($content);
+                return '';//imap_7bit($content);
             case self::ENCODING_8BIT:
                 return imap_8bit($content);
             case self::ENCODING_BASE64:
@@ -144,6 +181,14 @@ class CFDIXmlFinder
         }
         
         return $content;
+    }
+    
+    protected static function getApplicationName($structure){
+        if(isset($structure->parameters[0])){
+            return $structure->parameters[0]->value;
+        }
+        
+        return "file_".  strtotime(date("Y-m-d H:i:s"));
     }
     
 }
