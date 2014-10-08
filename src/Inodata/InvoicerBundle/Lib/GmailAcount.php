@@ -13,7 +13,7 @@ class GmailAcount extends BaseAcount
     
     public function getEmailsList()
     {
-        $imap = imap_open('{imap.gmail.com:993/imap/ssl}INBOX', $this->email, $this->password) 
+        $imap = imap_open($this->host, $this->email, $this->password) 
                 or die('cant connect');
         
         if($imap){
@@ -25,9 +25,8 @@ class GmailAcount extends BaseAcount
                 
                 $uid = imap_uid($imap, $newEmail);
                 
-                CFDIXmlFinder::fetchContent($imap, $uid);
+                CFDIXmlReader::fetchContentFromEmail($imap, $uid);
                 
-                exit();
                 return;
             }
         }

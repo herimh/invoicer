@@ -21,8 +21,6 @@ class BaseAcount extends ContainerAware
     public function __construct($email, $password) {
         $this->email = $email;
         $this->password = $password;
-        
-        //$this->initCurlAdapter();
     }
     
     protected function login(){
