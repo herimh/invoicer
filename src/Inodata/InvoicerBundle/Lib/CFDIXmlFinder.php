@@ -29,9 +29,6 @@ class CFDIXmlFinder
     }
     
     private static function getCFDIFromApplication($content, $structure){
-        print_r("Text <br>");
-        print_r($structure); print_r("<br><br>");
-        
         $contentEncoded = self::encodeContent($content, $structure->encoding);
         $applicationName = self::getApplicationName($structure);
         
@@ -61,8 +58,10 @@ class CFDIXmlFinder
             $zip->close();
         }
         
+        fclose($file);
         //Delet zip file created previously
         unlink(self::ZIP_FILES_FOLDER.$fileName);
+        
         
         //Reading folder contend
         return self::findXMLFromDir(self::ZIP_FILES_FOLDER);
@@ -71,16 +70,15 @@ class CFDIXmlFinder
     private static function findXMLFromDir($dir){
         $files = scandir($dir);
         
-        $xmlDocs = [];
+        $cfdis = [];
         foreach ($files as $file){
             if(mime_content_type($dir.$file) == self::TYPE_XML){
-                $xmlDocs[] = simplexml_load_file($dir.$file);
+                $cfdi = new CfdiParser\Parser($dir.$file);
+                $cfdis[] = $cfdi->getCfdiArray();
             }
         }
         
-        print_r($xmlDocs); exit();
-        
-        return $xmlDocs;
+        return $cfdis;
     }
 
     protected function findUrlsInText($body){
@@ -147,8 +145,6 @@ class CFDIXmlFinder
                 //TODO: logic for others
                 break;
         }
-        
-        return $xmlDocs;
     }
     
     protected static function encodeContent($content, $encodingType)
