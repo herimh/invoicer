@@ -6,14 +6,16 @@ Pretend create a symfony bundle to read invoices from an email account and extra
 Requirements:
 Symfony 2.*
 
-Extra php extensions:
+Extra php dev extensions:<br/>
 sudo apt-get install php5-dev
+<p/>
 
-RarArchive instalation:
-sudo pecl -v install rar
-or
+RarArchive instalation:<br/>
+sudo pecl -v install rar <br/>
+or<br/>
 Manually instalation: http://php.net/manual/en/rar.installation.php
+<p>
 
-Uploads folder:
-Create a folder %ProjectRoot%/web/uploads and set write permisions:
+Uploads folder:<br/>
+Create a folder %ProjectRoot%/web/uploads and set write permisions:<br/>
 sudo chmod 777 -R web/uploads
