@@ -27,7 +27,13 @@ class CFDIXmlReader
     const ENCODING_BASE64 = 3;
     const ENCODING_QUOTED_PRINTABLE = 4;
     
-    const TYPE_XML = 'application/xml';
+    const FILE_TYPE_XML = 'application/xml';
+    const FILE_TYPE_PDF = 'application/pdf';
+    const FILE_TYPE_RAR = 'application/x-rar';
+    const FILE_TYPE_ZIP = 'application/zip';
+    const FILE_TYPE_HTML = 'text/html';
+    const FILE_TYPE_TEXT = 'text/plain';
+    
     const TEMP_FOLDER =  "uploads/temp/";
     const BACKUP_FOLDER = "uploads/backup/";
     
@@ -69,16 +75,19 @@ class CFDIXmlReader
                 if($mainMimeType == self::MIME_TYPE_TEXT){
                     return $cfdiXmlReader->getFromEmailText($content, $structure);
                 }
-                break; 
+                break;
                 
             case self::MIME_TYPE_MULTIPART:
-                $xmlDocs = [];
+                $cfdis = [];
+                
                 foreach ($structure->parts as $index => $subStruct){
-                    
                     $newPartNumber = ($index+1);
-                    $xmlDocs = self::fetchContentFromEmail($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
+                    $cfdi = self::fetchContentFromEmail($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
+                    if($cfdi){
+                        $xmlDocs = array_merge($xmlDocs, self::fetchContentFromEmail($imap, $uid, $mainMimeType, $subStruct, $newPartNumber));
+                    }
                 }
-                return $xmlDocs;
+                return $cfdis;
             
             case self::MIME_TYPE_MESSAGE:
                 //TODO: logic for message type
@@ -100,7 +109,6 @@ class CFDIXmlReader
                 break;
             
             default :
-                //TODO: logic for others
                 break;
         }
     }
@@ -113,8 +121,51 @@ class CFDIXmlReader
      * 
      * * @return array  collection of parsed CFDIs
      */
-    protected function getFromEmailText($content, $structure){
-        //@TODO: pending 
+    protected function getFromEmailText($content, $structure)
+    {
+        $contentEncoded = $this->encodeContent($content, $structure->encoding);
+        $reg_exUrl = "/(http|https|ftp|ftps)\:\/\/[a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,3}(\/\S*)?/";
+        
+        $urls = [];
+        preg_match_all($reg_exUrl, $contentEncoded, $urls);
+        
+        $filesDownloaded = [];
+        if($urls[0]){
+            foreach ($urls[0] as $index=>$url){
+                $downloadedFile = $this->downloadFile($url,$index);
+                if($downloadedFile){
+                    $filesDownloaded[] = $downloadedFile;
+                }
+            }
+        }
+        
+        foreach ($filesDownloaded as $file){
+            $mimeType = mime_content_type($file);
+            switch ($mimeType){
+                case self::FILE_TYPE_XML;
+                    rename($file, $file.".xml");
+                    break;
+                case self::FILE_TYPE_PDF:
+                    rename($file, $file.".pdf");
+                    break;
+                case self::FILE_TYPE_ZIP:
+                    rename($file, $file.".zip");
+                    $this->findXmlFromZIP($file.".zip");
+                    break;
+                case self::FILE_TYPE_RAR:
+                    rename($file, $file.".rar");
+                    $this->findXmlFromRAR($file.".rar");
+                    break;
+                
+                //TODO: case for TAR, 7zip, GZ an other compress technologies files
+                
+                default :
+                    unlink($file);
+                    break;
+            }
+        }
+        
+        return $this->getFromDir($this->getTempDirectory());
     }
     
     /**
@@ -125,7 +176,6 @@ class CFDIXmlReader
         $contentEncoded = $this->encodeContent($content, $structure->encoding);
         $applicationName = $this->getApplicationName($structure);
         
-        //print_r($structure); exit();
         $subtype = $structure->subtype;
         
         if($subtype == 'OCTET-STREAM'){
@@ -134,21 +184,25 @@ class CFDIXmlReader
         
         switch (strtoupper($subtype)){
             case 'PDF':
-                break;
+                $this->saveFileContent($this->getTempDirectory().$applicationName, $contentEncoded);
+                return null;
             case 'XML':
+                if($this->saveFileContent($this->getTempDirectory().$applicationName, $contentEncoded)){
+                    return $this->getFromDir($this->getTempDirectory());
+                }
                 break;
             case 'ZIP':
-                if($this->findXmlFromZIP($contentEncoded, $applicationName)){
+                if($this->findXmlFromZIP($this->getTempDirectory().$applicationName, $contentEncoded)){
                     return $this->getFromDir($this->getTempDirectory());
                 }
                 break;
             case 'RAR':
-                if($this->findXmlFromRAR($contentEncoded, $applicationName)){
+                if($this->findXmlFromRAR($this->getTempDirectory().$applicationName, $contentEncoded)){
                     return $this->getFromDir($this->getTempDirectory());
                 }
                 break;
             case 'TAR':
-                if($this->findXmlFromTar($contentEncoded, $applicationName)){
+                if($this->findXmlFromTar($this->getTempDirectory().$applicationName, $contentEncoded)){
                     return $this->getFromDir($this->getTempDirectory());
                 }
                 break;
@@ -159,28 +213,60 @@ class CFDIXmlReader
      * Try to find an xml files from url 
      * @param string $url 
      */
-    private function findXmlFromUrl($url){
+    private function downloadFile($url, $index){
+        $file = fopen($url, 'r');
+
+        if($file){
+            $newFilename = $this->getTempDirectory()."_file{$index}_".date("Ymd_H:i:s");
+            $source = fopen($newFilename, 'w');
+            $content= stream_get_contents($file);
+            
+            if($content){
+                fwrite($source, $content);
+                fclose($source);
+                
+                return $newFilename;
+            }
+        }
         
+        return null;
     }
     
-    /**
+    private function saveFileContent($fileDir, $content)
+    {
+        $file = fopen($fileDir, "w");
+        
+        if($file){
+            fwrite($file, $content);
+            fclose($file);
+            
+            return true;
+        }
+        
+        return false;
+    }
+
+        /**
      * Extract the ZIP file to find XML files
      * 
      * @param binary $content zip file content as binary data
-     * @param string $filename name for file
+     * @param string $fileDir name for file
      */
-    private function findXmlFromZIP($content, $filename)
+    private function findXmlFromZIP($fileDir, $content=null)
     {
         $tempDir = $this->getTempDirectory();
         
-        //Creating zip file temporally
-        $file = fopen($tempDir.$filename, 'w');
-        fwrite($file, $content);
-        //fclose($file);
+        //If file is received as binary
+        if($content){
+            //Creating zip file temporally
+            $file = fopen($fileDir, 'w');
+            fwrite($file, $content);
+            fclose($file);
+        }
         
         //Uncompress zip file
         $zip = new \ZipArchive();
-        $res = $zip->open($tempDir.$filename);
+        $res = $zip->open($fileDir);
         if($res === TRUE){
             $zip->extractTo($tempDir);
             $zip->close();
@@ -188,8 +274,7 @@ class CFDIXmlReader
         
         fclose($file);
         //Delet zip file created previously
-        unlink($tempDir.$filename);
-        
+        unlink($fileDir);
         
         return true;
     }
@@ -197,24 +282,27 @@ class CFDIXmlReader
     /**
      * Extract the RAR file to find XML files
      */
-    private function findXmlFromRAR($content, $filename)
+    private function findXmlFromRAR($fileDir, $content=null)
     {
         $tempDir = $this->getTempDirectory();
         
-        //Creating zip file temporally
-        $file = fopen($tempDir.$filename, 'w');
-        fwrite($file, $content);
+        //If file is received as binary
+        if($content){
+            //Creating rar file temporally
+            $file = fopen($fileDir, 'w');
+            fwrite($file, $content);
+            fclose($file);
+        }
         
-        $rar = rar_open($tempDir.$file);
+        $rar = rar_open($fileDir);
         $files = rar_list($rar);
         
         foreach ($files as $file){
-            $entry = rar_entry_get($rar, $file);
-            $entry->extract('.');
+            $file->extract($tempDir);
         }
         
         rar_close($rar);
-        unlink($tempDir.$filename);
+        unlink($fileDir);
         
         return true;
     }
@@ -237,7 +325,7 @@ class CFDIXmlReader
         $cfdis = [];
         foreach ($files as $file){
             //print_r($file);
-            if(mime_content_type($dir.$file) == self::TYPE_XML){
+            if(mime_content_type($dir.$file) == self::FILE_TYPE_XML){
                 $cfdi = new CfdiParser\Parser($dir.$file);
                 $cfdis[] = $cfdi->getCfdiArray();
             }
@@ -248,8 +336,6 @@ class CFDIXmlReader
             
             //TODO: if is folder
         }
-        
-        print_r($cfdis); exit();
         
         return $cfdis;
     }
