@@ -3,34 +3,31 @@
 namespace Inodata\InvoicerBundle\Lib;
 
 /**
- * Description of GmailAcount
- *
- * @author heriberto
+ * @author Heriberto Monterrubio <heri185403@gmail.com, heriberto@inodata.com.mx>
  */
 class GmailAcount extends BaseAcount
 {   
     private $host = '{imap.gmail.com:993/imap/ssl}INBOX';
     
-    public function getEmailsList()
+    public function getCFDIsFromUnseen()
     {
         $imap = imap_open($this->host, $this->email, $this->password) 
                 or die('cant connect');
         
+        $cfdis = [];
+        
         if($imap){
             $newEmails = imap_search($imap, 'UNSEEN');
-            
             foreach ($newEmails as $newEmail){
-                $header = imap_header($imap, $newEmail);
-                print_r($header->Subject.'<br><br>');
-                
                 $uid = imap_uid($imap, $newEmail);
+                $cfdi = CFDIXmlReader::fetchContentFromEmail($imap, $uid);
                 
-                CFDIXmlReader::fetchContentFromEmail($imap, $uid);
-                
-                return;
+                if($cfdi){
+                    $cfdis = array_merge($cfdis, $cfdi);
+                }
             }
         }
-    }
-    
-    
+        
+        return $cfdis;
+    } 
 }

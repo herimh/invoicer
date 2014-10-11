@@ -3,9 +3,10 @@
 namespace Inodata\InvoicerBundle\Lib;
 
 /**
- * Description of CFDIXmlReader
+ * Se encarga de leer los correos nuevos de una cuenta, determina si el contenido es un archivo de tipo CFDI,
+ * de ser asi, lee el contenido del archivo en XML, y genera un array final.
  *
- * @author heriberto
+ * @author Heriberto Monterrubio <heri185403@gmail.com, heriberto@inodata.com.mx>
  */
 class CFDIXmlReader 
 {
@@ -84,7 +85,7 @@ class CFDIXmlReader
                     $newPartNumber = ($index+1);
                     $cfdi = self::fetchContentFromEmail($imap, $uid, $mainMimeType, $subStruct, $newPartNumber);
                     if($cfdi){
-                        $xmlDocs = array_merge($xmlDocs, self::fetchContentFromEmail($imap, $uid, $mainMimeType, $subStruct, $newPartNumber));
+                        $cfdis = array_merge($cfdis, $cfdi);
                     }
                 }
                 return $cfdis;
