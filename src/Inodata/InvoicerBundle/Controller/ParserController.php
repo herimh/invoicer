@@ -15,6 +15,6 @@ class ParserController extends Controller
     {
         $emailReader = $this->get("invoicer.email_reader");
 
-        return new Response($emailReader->getCFDIContents());
+        return new Response($emailReader->getCFDIsFromEmail());
     }
 }

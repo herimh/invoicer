@@ -22,6 +22,8 @@ class GmailAcount extends BaseAcount
                 $uid = imap_uid($imap, $newEmail);
                 $cfdi = CFDIXmlReader::fetchContentFromEmail($imap, $uid);
                 
+                print_r($cfdi); exit();
+                
                 if($cfdi){
                     $cfdis = array_merge($cfdis, $cfdi);
                 }
